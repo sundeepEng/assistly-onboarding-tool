@@ -1,6 +1,8 @@
 import registryJson from "../generated/onboarding-registry.json";
 
 export type RegistryStep = {
+  home_types: string[];
+  permission_requirements: string[];
   step_id: string;
   title: string;
   guidance: string;
@@ -56,3 +58,20 @@ export const nextEligibleStep = (
   }
   return null;
 };
+
+import permissions from "../generated/permissions.json";
+export type Audience = {role: string | null; homeType: string};
+export function allowedSteps(a: Audience): RegistryStep[] {
+  const grants = (permissions as Record<string, string[]>)[a.role ?? ""] ?? [];
+  return Object.values(registry.steps).filter(s => s.home_types.includes(a.homeType) && s.permission_requirements.every(p => grants.includes(p)));
+}
+export function walkthrough(a: Audience) {
+  const allowed = allowedSteps(a);
+  const grants = (permissions as Record<string, string[]>)[a.role ?? ""] ?? [];
+  return flowSteps("walkthrough").map(entry => ({...entry, guidance: `Review ${entry.screen_title}. Expand eligible task help for instructions.`,
+    tasks: allowed.filter(t => t.screen_id === entry.screen_id)
+  })).filter(s => {
+    const screen = (registryJson.screens as any)[s.screen_id];
+    return screen.home_types.includes(a.homeType) && screen.permission_requirements.every((p: string) => grants.includes(p));
+  });
+}
