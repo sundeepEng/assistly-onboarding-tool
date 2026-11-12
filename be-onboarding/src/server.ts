@@ -1,19 +1,7 @@
 import "dotenv/config";
 import http from "http";
 import { authenticate, AuthContext } from "./auth";
-import {
-  acknowledgeNavRequest,
-  bindRecord,
-  createNavRequest,
-  evaluateSession,
-  getOrCreateSession,
-} from "./session-service";
-import {
-  eligibleStepIds,
-  flowSteps,
-  getFlow,
-} from "./registry";
-import { respondToMessage, ViewHint } from "./gia-engine";
+import {productState, selectProduct, productReply} from "./product-walkthrough";
 
 const PORT = Number(process.env.PORT || 3100);
 const PORTAL_ORIGIN = process.env.PORTAL_ORIGIN || "http://localhost:3000";
@@ -37,7 +25,7 @@ const json = (res: http.ServerResponse, code: number, body: unknown) => {
 const readBody = (req: http.IncomingMessage): Promise<any> =>
   new Promise((resolve, reject) => {
     let data = "";
-    req.on("data", (c) => (data += c));
+    req.on("data", (c) => { data += c; if (data.length > 16384) { reject(new Error("Request too large")); req.destroy(); } });
     req.on("end", () => {
       try {
         resolve(data ? JSON.parse(data) : {});
@@ -56,6 +44,7 @@ async function callLyzr(params: {
   if (!apiKey) return null;
   try {
     const res = await fetch(LYZR_API_URL, {
+      signal: AbortSignal.timeout(15000),
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": apiKey },
       body: JSON.stringify({
@@ -90,188 +79,33 @@ const server = http.createServer(async (req, res) => {
 
   const auth: AuthContext | null = await authenticate(
     req.headers.authorization
-  );
+  ).catch(() => null);
   if (!auth) return json(res, 401, { error: "Not authenticated" });
 
   try {
-    // ---- Load (or create) the onboarding session -------------------------
-    if (req.method === "GET" && path === "/onboarding/session") {
-      const flowId = url.searchParams.get("flow_id");
-      const subjectRecordId = url.searchParams.get("subject_record_id");
-      if (!flowId || !getFlow(flowId))
-        return json(res, 400, { error: "unknown flow_id" });
-      const state = await getOrCreateSession({
-        userId: auth.userId,
-        homeId: auth.homeId,
-        flowId,
-        subjectRecordId,
-      });
-      // Resume is a natural moment to re-check application-verified progress.
-      const evaluated = await evaluateSession({
-        sessionId: state.session.id,
-        userId: auth.userId,
-        homeId: auth.homeId,
-      });
-      return json(res, 200, evaluated ?? state);
-    }
-
-    // ---- Bind the session to the record the user is working on -----------
-    if (req.method === "POST" && path === "/onboarding/bind-record") {
+    if (req.method === "GET" && path === "/walkthrough") return json(res, 200, await productState(auth));
+    if (req.method === "POST" && path === "/walkthrough/select") {
       const body = await readBody(req);
-      const recordId = String(body.record_id || "");
-      if (!recordId) return json(res, 400, { error: "record_id is required" });
-      const result = await bindRecord({
-        sessionId: String(body.session_id || ""),
-        userId: auth.userId,
-        homeId: auth.homeId,
-        recordId,
-      });
-      return json(
-        res,
-        result.ok ? 200 : result.status === "conflict" ? 409 : 404,
-        result
-      );
+      const state = await productState(auth);
+      const target = state.screens.find(s => s.screen_id === body.screen_id);
+      if (!target) return json(res, 403, {error:"Screen unavailable"});
+      return json(res, 200, await selectProduct(auth, target.screen_id, body.task_id, body.acknowledge === true));
     }
-
-    // ---- Re-evaluate completion checks (save/record events) --------------
-    if (req.method === "POST" && path === "/onboarding/evaluate") {
+    if (req.method === "POST" && path === "/walkthrough/chat") {
       const body = await readBody(req);
-      const state = await evaluateSession({
-        sessionId: String(body.session_id || ""),
-        userId: auth.userId,
-        homeId: auth.homeId,
-      });
-      return json(res, state ? 200 : 404, state ?? { error: "session not found" });
+      const message = String(body.message ?? "").trim();
+      if (!message || message.length > 4000) return json(res, 400, {error:"Invalid message"});
+      const state = await productState(auth);
+      const next = state.screens[state.screens.findIndex(s => s.screen_id === state.selected?.screen_id)+1] ?? null;
+      const proposal = await callLyzr({userId: `${auth.userId}:${auth.homeId}`, prompt: [
+        "You are Gia. Explain product navigation. Do not infer tabs, forms or records from the selected checklist screen. Do not mark actions complete. Record questions do not advance the tour.",
+        JSON.stringify({selected_screen:state.selected,selected_task:state.task,next_screen:next,eligible_screens:state.screens}),
+        'Return JSON {"intent":"explain|continue|open_step","message":"...","step_id":"eligible ID"}. Never invent paths.',
+        `User question: ${message}`].join("\n")});
+      return json(res, 200, productReply(message, state, proposal ?? undefined));
     }
-
-    // ---- Issue a navigation request (checklist click or Gia intent) ------
-    if (req.method === "POST" && path === "/onboarding/nav-request") {
-      const body = await readBody(req);
-      const result = await createNavRequest({
-        sessionId: String(body.session_id || ""),
-        userId: auth.userId,
-        homeId: auth.homeId,
-        stepId: String(body.step_id || ""),
-      });
-      return json(res, result.ok ? 200 : 400, result);
-    }
-
-    // ---- Apply the iframe's navigation acknowledgement -------------------
-    if (req.method === "POST" && path === "/onboarding/nav-ack") {
-      const body = await readBody(req);
-      const status = String(body.status || "");
-      if (!["ok", "blocked", "cancelled", "error"].includes(status))
-        return json(res, 400, { error: "invalid status" });
-      const result = await acknowledgeNavRequest({
-        requestId: String(body.request_id || ""),
-        userId: auth.userId,
-        homeId: auth.homeId,
-        status: status as any,
-      });
-      return json(
-        res,
-        result.ok ? 200 : result.status === "stale" ? 409 : 404,
-        result
-      );
-    }
-
-    // ---- Gia chat ---------------------------------------------------------
-    if (req.method === "POST" && path === "/gia/chat") {
-      const body = await readBody(req);
-      const message = String(body.message || "").trim();
-      if (!message) return json(res, 400, { error: "message is required" });
-
-      const v: ViewHint = {
-        flow_id: typeof body.view?.flow_id === "string" ? body.view.flow_id : undefined,
-        screen_id: typeof body.view?.screen_id === "string" ? body.view.screen_id : undefined,
-        tab: typeof body.view?.tab === "string" ? body.view.tab : undefined,
-      };
-      if (!v.flow_id || !getFlow(v.flow_id)) {
-        return json(res, 200, {
-          intent: "explain",
-          message:
-            "Pick an onboarding flow on the left first — for example “New senior lead” — and I’ll guide you through it.",
-          navigation: null,
-        });
-      }
-
-      // The saved session is authoritative for the active step and progress.
-      let state = await getOrCreateSession({
-        userId: auth.userId,
-        homeId: auth.homeId,
-        flowId: v.flow_id,
-        subjectRecordId:
-          typeof body.subject_record_id === "string"
-            ? body.subject_record_id
-            : null,
-      });
-      state = (await evaluateSession({
-        sessionId: state.session.id,
-        userId: auth.userId,
-        homeId: auth.homeId,
-      })) ?? state;
-      v.active_step_id = state.session.active_task_id ?? undefined;
-      const verified = new Set(
-        state.progress.filter((p) => p.verified_at).map((p) => p.step_id)
-      );
-
-      const eligible = flowSteps(v.flow_id).map((s) => ({
-        step_id: s.step_id,
-        title: s.title,
-        screen: `${s.module_title} → ${s.screen_title}`,
-        guidance: s.guidance,
-        verified: verified.has(s.step_id),
-      }));
-
-      const proposal = await callLyzr({
-        userId: auth.userId,
-        prompt: [
-          "You are Gia, an onboarding guide embedded in a portal.",
-          `Signed-in user role: ${auth.role ?? "unknown"}; home: ${auth.homeId}.`,
-          `Active flow: ${v.flow_id}; active step: ${
-            v.active_step_id ?? "none"
-          }; dashboard screen: ${v.screen_id ?? "unknown"}${
-            v.tab ? `/${v.tab}` : ""
-          }.`,
-          `Eligible steps for this flow (choose step_id only from this list): ${JSON.stringify(
-            eligible
-          )}.`,
-          'Reply with JSON only: {"intent":"explain|continue|open_step","message":"...","step_id":"<one eligible step_id, only for open_step>"}.',
-          "Never include paths or URLs; the portal resolves navigation itself.",
-          `User: ${message}`,
-        ].join("\n"),
-      });
-
-      const reply = respondToMessage(message, v, verified, proposal ?? undefined);
-
-      // Navigation intents get a server-issued request bound to this session.
-      let navigation = null;
-      if (reply.navigation) {
-        const nav = await createNavRequest({
-          sessionId: state.session.id,
-          userId: auth.userId,
-          homeId: auth.homeId,
-          stepId: reply.navigation.step_id,
-        });
-        if (nav.ok) {
-          navigation = {
-            request_id: nav.request_id,
-            step_id: nav.step_id,
-            path: nav.path,
-          };
-        } else {
-          return json(res, 200, {
-            intent: "explain",
-            message:
-              "I can’t open that screen for this step right now — it isn’t available in the current flow.",
-            navigation: null,
-          });
-        }
-      }
-      return json(res, 200, { ...reply, navigation });
-    }
-
-    return json(res, 404, { error: "not found" });
+    // Legacy record-flow endpoints are not exposed in the product release.
+    return json(res, 404, {error:"not found"});
   } catch (e: any) {
     console.error(e);
     return json(res, 500, { error: "internal error" });

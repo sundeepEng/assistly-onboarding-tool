@@ -80,7 +80,12 @@ for (const mod of modules) {
     screenIds.add(screen.screen_id);
     if (!SAFE_PATH.test(screen.path || ""))
       fail(`unsafe screen path for ${screen.screen_id}: ${screen.path}`);
+    if (!Array.isArray(screen.home_types) || !screen.home_types.every(t => ["Personal Care Home", "In Home Care", "Adult Day Center", "Assisted Living", "Memory Care"].includes(t))) fail(`invalid home applicability: ${screen.screen_id}`);
+    if (!Array.isArray(screen.permission_requirements) || !screen.permission_requirements.length) fail(`missing permission requirements: ${screen.screen_id}`);
     screens[screen.screen_id] = {
+      home_types: screen.home_types ?? [],
+      permission_requirements: screen.permission_requirements ?? [],
+      review_home_types: screen.review_home_types ?? [],
       screen_id: screen.screen_id,
       title: screen.title,
       path: screen.path,
@@ -96,6 +101,8 @@ for (const mod of modules) {
         fail(`step ${id} has unknown kind ${action.kind}`);
       steps[id] = {
         step_id: id,
+        home_types: action.home_types ?? screen.home_types ?? [],
+        permission_requirements: [...(screen.permission_requirements ?? []), ...(action.permission_requirements ?? [])],
         title: action.title,
         guidance: action.guidance,
         kind: action.kind,
@@ -120,7 +127,7 @@ for (const flow of flows) {
   for (const stepId of flow.steps) {
     if (!steps[stepId])
       fail(`flow ${flow.flow_id} references unknown step ${stepId}`);
-    if (steps[stepId].kind !== "onboarding")
+    if (flow.flow_id !== "walkthrough" && steps[stepId].kind !== "onboarding")
       fail(`flow ${flow.flow_id} includes non-onboarding step ${stepId}`);
   }
   flowMap[flow.flow_id] = {
@@ -132,8 +139,7 @@ for (const flow of flows) {
 
 const registry = {
   schema_version: config.schema_version || "1.0.0",
-  generated_at: new Date().toISOString(),
-  source: contextPath,
+  source: "fe/docs/gia-onboarding/GIA_CRM_CLINICAL_ONBOARDING.md.md",
   screens,
   steps,
   flows: flowMap,
@@ -144,3 +150,12 @@ writeFileSync(outPath, JSON.stringify(registry, null, 2) + "\n");
 console.log(
   `onboarding-registry: wrote ${outPath} (${Object.keys(steps).length} steps, ${Object.keys(flowMap).length} flows)`
 );
+
+// Snapshot only the dashboard's EDIT grants; same includes(feature) semantics as hasAccess.
+const roleSource = readFileSync(resolve(here, "../utils/roles.ts"), "utf8");
+const permissions = {};
+for (const match of roleSource.matchAll(/^  (\w+): \{([\s\S]*?)(?=^  \w+: \{|^};)/gm)) {
+  const edit = /EDIT:\s*\[([\s\S]*?)\]/.exec(match[2]);
+  if (edit) permissions[match[1]] = [...edit[1].matchAll(/"([A-Z_]+)"/g)].map(m => m[1]);
+}
+writeFileSync(resolve(here, "../../be-onboarding/generated/permissions.json"), JSON.stringify(permissions, null, 2) + "\n");

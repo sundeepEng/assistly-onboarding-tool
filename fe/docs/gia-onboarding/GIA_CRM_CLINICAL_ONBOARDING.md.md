@@ -89,62 +89,92 @@ Based on the supplied Assistly walkthrough. Routes use the dashboard origin. Rol
               "title": "Add a senior lead",
               "guidance": "In Contacts, select **+ Add New**, enter the lead details, and save.",
               "kind": "onboarding",
-              "completion_check_key": "lead_exists"
+              "completion_check_key": "lead_exists",
+              "permission_requirements": [
+                "CRM_ADDNEW"
+              ]
             },
             {
               "step_id": "crm.senior_leads.milestones",
               "title": "Review lead milestones",
               "guidance": "Review Initial Contact, Home Tour, biographical information, and document e-sign milestones. Use them to identify what still needs attention.",
               "kind": "onboarding",
-              "completion_check_key": null
+              "completion_check_key": null,
+              "permission_requirements": []
             },
             {
               "step_id": "crm.senior_leads.intake",
               "title": "Complete senior intake",
               "guidance": "Click on the lead\u2019s name. Review Biography, Medical, Care Plan (ADLs and health), and Documents. Enter intake details in the applicable tabs and save.",
               "kind": "onboarding",
-              "completion_check_key": null
+              "completion_check_key": null,
+              "permission_requirements": []
             },
             {
               "step_id": "crm.senior_leads.documents",
               "title": "Prepare senior agreements",
               "guidance": "Select the lead\u2019s name, open Documents, and add or prepare the applicable agreements. Confirm the required packet with your administrator if unclear.",
               "kind": "onboarding",
-              "completion_check_key": null
+              "completion_check_key": null,
+              "permission_requirements": []
             },
             {
               "step_id": "crm.senior_leads.invite",
               "title": "Invite a senior lead",
               "guidance": "With an email on the selected lead, open the row\u2019s three-dot menu and select **Onboard** to invite them to the Assistly portal.",
               "kind": "onboarding",
-              "completion_check_key": "lead_onboarded"
+              "completion_check_key": "lead_onboarded",
+              "permission_requirements": [
+                "CRM_ONBOARD_LEAD"
+              ]
             },
             {
               "step_id": "crm.senior_leads.esign",
               "title": "Initiate senior e-sign",
               "guidance": "For a new senior lead using the signing workflow, review the documents attached to the lead before selecting **Initiate E-Sign** from the row menu; this sends the lead\u2019s documents for signature. Skip this step for a resident already with the home before it adopted Assistly Care.",
               "kind": "onboarding",
-              "completion_check_key": null
+              "completion_check_key": null,
+              "permission_requirements": [
+                "CRM_INITIATE_ESIGN"
+              ]
             },
             {
               "step_id": "crm.senior_leads.move",
               "title": "Move a senior lead to Clinical",
               "guidance": "From the selected lead\u2019s row menu, choose **Move to Clinical** when the record is eligible. For residents already with the home before Assistly Care, use this path without e-sign.",
               "kind": "onboarding",
-              "completion_check_key": "record_in_clinical"
+              "completion_check_key": "record_in_clinical",
+              "permission_requirements": [
+                "CRM_MOVE_TO_CLINICAL"
+              ]
             },
             {
               "step_id": "crm.senior_leads.bulk",
               "title": "Send a bulk message",
               "guidance": "In Contacts, use the select-all checkbox or select individual leads, then choose **Send Bulk Message**.",
-              "kind": "reference"
+              "kind": "reference",
+              "permission_requirements": []
             },
             {
               "step_id": "crm.senior_leads.history",
               "title": "Review campaign history",
               "guidance": "Open the **Campaigns History** tab to view previous campaigns.",
-              "kind": "reference"
+              "kind": "reference",
+              "permission_requirements": []
             }
+          ],
+          "home_types": [
+            "Personal Care Home",
+            "In Home Care"
+          ],
+          "permission_requirements": [
+            "CRM_DASHBOARD"
+          ],
+          "review_home_types": [
+            "Adult Day Center",
+            "Assisted Living",
+            "Memory Care",
+            "Residential"
           ]
         },
         {
@@ -156,20 +186,38 @@ Based on the supplied Assistly walkthrough. Routes use the dashboard origin. Rol
               "step_id": "crm.referral_agents.add",
               "title": "Add a referral agent",
               "guidance": "Select **+ Add New**, enter the referral agent details, and save.",
-              "kind": "reference"
+              "kind": "reference",
+              "permission_requirements": [
+                "CRM_ADDNEW"
+              ]
             },
             {
               "step_id": "crm.referral_agents.campaign",
               "title": "Manage referral campaigns",
               "guidance": "Select recipients before sending a bulk message. Use campaign history to review prior campaigns where available.",
-              "kind": "reference"
+              "kind": "reference",
+              "permission_requirements": []
             },
             {
               "step_id": "crm.referral_agents.manage",
               "title": "Update a referral agent",
               "guidance": "Set the status to Contacted, Not Contacted, Follow Up Required, or Not Interested and save. Use the row\u2019s three-dot menu to edit or delete an agent.",
-              "kind": "reference"
+              "kind": "reference",
+              "permission_requirements": []
             }
+          ],
+          "home_types": [
+            "Personal Care Home",
+            "In Home Care"
+          ],
+          "permission_requirements": [
+            "CRM_REFERRAL"
+          ],
+          "review_home_types": [
+            "Adult Day Center",
+            "Assisted Living",
+            "Memory Care",
+            "Residential"
           ]
         },
         {
@@ -182,21 +230,39 @@ Based on the supplied Assistly walkthrough. Routes use the dashboard origin. Rol
               "title": "Add a care lead",
               "guidance": "Select **+ Add New**, enter the care lead details, and save.",
               "kind": "onboarding",
-              "completion_check_key": "lead_exists"
+              "completion_check_key": "lead_exists",
+              "permission_requirements": [
+                "CRM_ADDNEW"
+              ]
             },
             {
               "step_id": "crm.care_leads.documents",
               "title": "Manage care lead documents",
               "guidance": "Select the care lead\u2019s name to open their document management area. Add applicable documents; existing documents can be viewed, edited, or deleted by authorized users. Confirm which documents are required for this home.",
               "kind": "onboarding",
-              "completion_check_key": null
+              "completion_check_key": null,
+              "permission_requirements": []
             },
             {
               "step_id": "crm.care_leads.menu",
               "title": "Review available care lead actions",
               "guidance": "Open the row\u2019s three-dot menu. Guide users only to actions shown for their role and record; verify each action before adding it to the flow.",
-              "kind": "reference"
+              "kind": "reference",
+              "permission_requirements": []
             }
+          ],
+          "home_types": [
+            "Personal Care Home",
+            "In Home Care"
+          ],
+          "permission_requirements": [
+            "CRM_PCG_HOME"
+          ],
+          "review_home_types": [
+            "Adult Day Center",
+            "Assisted Living",
+            "Memory Care",
+            "Residential"
           ]
         },
         {
@@ -209,8 +275,24 @@ Based on the supplied Assistly walkthrough. Routes use the dashboard origin. Rol
               "title": "Add a nurse lead",
               "guidance": "Select **+ Add New**, enter the nurse lead details, and save. Further nurse lead steps need verification.",
               "kind": "onboarding",
-              "completion_check_key": "lead_exists"
+              "completion_check_key": "lead_exists",
+              "permission_requirements": [
+                "CRM_ADDNEW"
+              ]
             }
+          ],
+          "home_types": [
+            "Personal Care Home",
+            "In Home Care"
+          ],
+          "permission_requirements": [
+            "CRM_NURSE_HOME"
+          ],
+          "review_home_types": [
+            "Adult Day Center",
+            "Assisted Living",
+            "Memory Care",
+            "Residential"
           ]
         }
       ]
@@ -230,20 +312,38 @@ Based on the supplied Assistly walkthrough. Routes use the dashboard origin. Rol
               "title": "Verify the resident in Clinical",
               "guidance": "Switch to List View and locate the resident. Select their name to open details, including the Face Sheet. Verify the intended resident record exists in Clinical after transfer.",
               "kind": "onboarding",
-              "completion_check_key": "record_in_clinical"
+              "completion_check_key": "record_in_clinical",
+              "permission_requirements": []
             },
             {
               "step_id": "clinical.seniors.menu",
               "title": "Find resident actions",
               "guidance": "In List View, open the resident\u2019s three-dot menu. Depending on access, look for Onboard, Add Medication, MedPass, Incident Report, or Initiate E-Sign for new documents.",
-              "kind": "reference"
+              "kind": "reference",
+              "permission_requirements": []
             },
             {
               "step_id": "clinical.seniors.medications",
               "title": "Manage medication records",
               "guidance": "Authorized staff can add, edit, or delete medication records, or upload a list for bulk extraction. Qualified staff should verify extracted entries before they are used for care. Gia explains navigation and does not change records or give clinical advice.",
-              "kind": "reference"
+              "kind": "reference",
+              "permission_requirements": [
+                "CLINICAL_MEDICATION"
+              ]
             }
+          ],
+          "home_types": [
+            "Personal Care Home",
+            "In Home Care"
+          ],
+          "permission_requirements": [
+            "CLINICAL_DASHBOARD"
+          ],
+          "review_home_types": [
+            "Adult Day Center",
+            "Assisted Living",
+            "Memory Care",
+            "Residential"
           ]
         },
         {
@@ -255,8 +355,22 @@ Based on the supplied Assistly walkthrough. Routes use the dashboard origin. Rol
               "step_id": "clinical.care_team.details",
               "title": "Review a care team member",
               "guidance": "Select the member\u2019s name to open their record and Face Sheet. The row menu does not include Onboard per the supplied notes; verify other actions separately.",
-              "kind": "reference"
+              "kind": "reference",
+              "permission_requirements": []
             }
+          ],
+          "home_types": [
+            "Personal Care Home",
+            "In Home Care"
+          ],
+          "permission_requirements": [
+            "CRM_PCG_HOME"
+          ],
+          "review_home_types": [
+            "Adult Day Center",
+            "Assisted Living",
+            "Memory Care",
+            "Residential"
           ]
         },
         {
@@ -268,8 +382,22 @@ Based on the supplied Assistly walkthrough. Routes use the dashboard origin. Rol
               "step_id": "clinical.nurses.details",
               "title": "Review a nurse record",
               "guidance": "Select the nurse\u2019s name to open their record and Face Sheet. The row menu does not include Onboard per the supplied notes; verify other actions separately.",
-              "kind": "reference"
+              "kind": "reference",
+              "permission_requirements": []
             }
+          ],
+          "home_types": [
+            "Personal Care Home",
+            "In Home Care"
+          ],
+          "permission_requirements": [
+            "CLINICAL_NURSE_HOME"
+          ],
+          "review_home_types": [
+            "Adult Day Center",
+            "Assisted Living",
+            "Memory Care",
+            "Residential"
           ]
         }
       ]
@@ -313,6 +441,20 @@ Based on the supplied Assistly walkthrough. Routes use the dashboard origin. Rol
       "flow_id": "nurse_lead_intake",
       "steps": [
         "crm.nurse_leads.add"
+      ],
+      "sequence_status": "suggested",
+      "authorization": "server_required"
+    },
+    {
+      "flow_id": "walkthrough",
+      "steps": [
+        "crm.senior_leads.add",
+        "crm.referral_agents.add",
+        "crm.care_leads.add",
+        "crm.nurse_leads.add",
+        "clinical.seniors.verify",
+        "clinical.care_team.details",
+        "clinical.nurses.details"
       ],
       "sequence_status": "suggested",
       "authorization": "server_required"

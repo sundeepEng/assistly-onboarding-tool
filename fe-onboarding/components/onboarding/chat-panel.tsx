@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import { useOnboarding } from "./onboarding-provider";
 
 const ChatPanel = () => {
-  const { messages, sendChat, chatBusy } = useOnboarding();
+  const { messages, sendChat, chatBusy, navigateToStep, pendingStepId } = useOnboarding();
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -44,7 +44,7 @@ const ChatPanel = () => {
                 }`}
             >
               {m.role === "agent" ? (
-                <ReactMarkdown>{m.text}</ReactMarkdown>
+                <><ReactMarkdown>{m.text}</ReactMarkdown>{m.screenId && <button disabled={!!pendingStepId} className="block rounded bg-blue-600 text-white px-3 py-1 mt-2" onClick={() => void navigateToStep(m.screenId!, m.acknowledge)}>Open</button>}</>
               ) : (
                 m.text
               )}
