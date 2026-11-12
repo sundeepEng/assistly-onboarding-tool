@@ -1,0 +1,170 @@
+name: Cypress E2E
+
+# Runs the Cypress suite on demand against any mapped environment, and
+# automatically smoke-tests dev on PRs that touch the test code or the app.
+#
+# Secrets (repo Settings -> Secrets and variables -> Actions):
+#   DEV_CYPRESS_USERNAME / DEV_CYPRESS_PASSWORD    dev account (optional —
+#                                                  a committed fallback exists)
+#   STG_CYPRESS_USERNAME / STG_CYPRESS_PASSWORD    stg account (required for stg)
+#   MAIN_CYPRESS_USERNAME / MAIN_CYPRESS_PASSWORD  prod account (required)
+#
+# Variables (same screen, Variables tab):
+#   DEV_CYPRESS_BASE_URL   e.g. https://dev.assistly.live    (optional —
+#   STG_CYPRESS_BASE_URL   e.g. https://stg.assistly.live     defaults live in
+#   MAIN_CYPRESS_BASE_URL  e.g. https://www.assistly.live     environments.ts)
+
+"on":
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        type: choice
+        options: [dev, stg, main]
+        default: dev
+      tags:
+        description: "@cypress/grep tag expression — OR with spaces, AND with +, NOT with - (e.g. '@smoke', '@sanity @smoke', '-@defect')"
+        type: string
+        default: "-@defect"
+        required: false
+      spec:
+        description: "Limit to a spec path/glob (e.g. cypress/e2e/crm/**). Empty = all."
+        type: string
+        required: false
+      pass_threshold:
+        description: "Minimum pass rate (%) required for the job to succeed"
+        type: string
+        default: "80"
+        required: false
+  # Lets a deploy pipeline call this workflow as a promotion gate:
+  #   e2e-gate:
+  #     uses: ./.github/workflows/cypress-automation.yml
+  #     with: { environment: stg, tags: "-@defect", pass_threshold: "80" }
+  #     secrets: inherit
+  #   deploy:
+  #     needs: e2e-gate
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        default: dev
+      tags:
+        type: string
+        default: "-@defect"
+      spec:
+        type: string
+        default: ""
+      pass_threshold:
+        type: string
+        default: "80"
+    outputs:
+      pass_rate:
+        description: "Measured pass rate (%) of the gated run"
+        value: ${{ jobs.cypress.outputs.pass_rate }}
+  # PR / push / release gating lives in cypress-gates.yml — it calls this
+  # workflow per lane. Keep this file the single generic runner.
+
+concurrency:
+  group: cypress-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cypress:
+    name: E2E (${{ inputs.environment || 'dev' }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    outputs:
+      pass_rate: ${{ steps.gate.outputs.pass_rate }}
+
+    env:
+      TARGET_ENV: ${{ inputs.environment || 'dev' }}
+      GREP_TAGS: ${{ inputs.tags || '@smoke' }}
+      PASS_THRESHOLD: ${{ inputs.pass_threshold || '80' }}
+      DEV_CYPRESS_BASE_URL: ${{ vars.DEV_CYPRESS_BASE_URL }}
+      STG_CYPRESS_BASE_URL: ${{ vars.STG_CYPRESS_BASE_URL }}
+      MAIN_CYPRESS_BASE_URL: ${{ vars.MAIN_CYPRESS_BASE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install deps
+        run: npm install --no-audit --no-fund --legacy-peer-deps
+
+      - name: Typecheck + lint test code
+        run: |
+          npm run typecheck:cypress
+          npm run lint:cypress
+
+      - name: Resolve base URL
+        run: |
+          # Prefer repo vars; fall back to the committed TARGETS table so the
+          # job works even when vars are not configured.
+          declare -A DEFAULTS=(
+            [dev]="https://dev.assistly.live"
+            [stg]="https://stg.assistly.live"
+            [main]="https://www.assistly.live"
+          )
+          VAR_NAME="$(echo "${TARGET_ENV}" | tr '[:lower:]' '[:upper:]')_CYPRESS_BASE_URL"
+          echo "BASE_URL=${!VAR_NAME:-${DEFAULTS[$TARGET_ENV]}}" >> "$GITHUB_ENV"
+
+      - name: Wait for site
+        run: |
+          echo "Waiting for ${BASE_URL} to become reachable..."
+          for i in {1..60}; do
+            if curl -fsS --max-time 10 "${BASE_URL}" >/dev/null; then
+              echo "Site is reachable."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "Timed out waiting for ${BASE_URL}"
+          exit 1
+
+      - name: Run Cypress
+        # Allowed to fail — the quality-gate step decides success on the
+        # measured pass rate, so a 79%-red run still uploads its artifacts.
+        continue-on-error: true
+        id: cypress
+        env:
+          CYPRESS_ENVIRONMENT: ${{ env.TARGET_ENV }}
+          CYPRESS_DEV_USER_EMAIL: ${{ secrets.DEV_CYPRESS_USERNAME }}
+          CYPRESS_DEV_USER_PASSWORD: ${{ secrets.DEV_CYPRESS_PASSWORD }}
+          CYPRESS_STG_USER_EMAIL: ${{ secrets.STG_CYPRESS_USERNAME }}
+          CYPRESS_STG_USER_PASSWORD: ${{ secrets.STG_CYPRESS_PASSWORD }}
+          CYPRESS_MAIN_USER_EMAIL: ${{ secrets.MAIN_CYPRESS_USERNAME }}
+          CYPRESS_MAIN_USER_PASSWORD: ${{ secrets.MAIN_CYPRESS_PASSWORD }}
+          SKIP_KNOWN_DEFECTS: "true"
+        run: |
+          SPEC_ARG=""
+          if [ -n "${{ inputs.spec }}" ]; then
+            SPEC_ARG="--spec ${{ inputs.spec }}"
+          fi
+          npx cypress run \
+            --config "baseUrl=${BASE_URL}" \
+            --env "environment=${{ env.TARGET_ENV }}" \
+            --expose "grepTags=${{ env.GREP_TAGS }}" \
+            ${SPEC_ARG}
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-report-${{ env.TARGET_ENV }}-${{ github.run_attempt }}
+          path: |
+            cypress/reports
+            cypress/screenshots
+            cypress/videos
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Quality gate (>= ${{ env.PASS_THRESHOLD }}% pass)
+        if: always()
+        id: gate
+        run: node cypress/tools/quality-gate.js cypress/reports/index.json "${PASS_THRESHOLD}"

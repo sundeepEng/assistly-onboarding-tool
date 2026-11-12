@@ -1,0 +1,370 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-11-12T20:38:00.712Z",
+  "source": "/Users/sundeeprn/Documents/Development/assistly/fe/docs/gia-onboarding/GIA_CRM_CLINICAL_ONBOARDING.md.md",
+  "screens": {
+    "senior_leads": {
+      "screen_id": "senior_leads",
+      "title": "Senior Leads",
+      "path": "/crm",
+      "module_id": "crm",
+      "module_title": "CRM"
+    },
+    "referral_agents": {
+      "screen_id": "referral_agents",
+      "title": "Referral Agents",
+      "path": "/crm/referral",
+      "module_id": "crm",
+      "module_title": "CRM"
+    },
+    "care_leads": {
+      "screen_id": "care_leads",
+      "title": "Care Leads",
+      "path": "/crm/pcg",
+      "module_id": "crm",
+      "module_title": "CRM"
+    },
+    "nurse_leads": {
+      "screen_id": "nurse_leads",
+      "title": "Nurse Leads",
+      "path": "/crm/nurse",
+      "module_id": "crm",
+      "module_title": "CRM"
+    },
+    "seniors": {
+      "screen_id": "seniors",
+      "title": "Seniors",
+      "path": "/clinical",
+      "module_id": "clinical",
+      "module_title": "Clinical"
+    },
+    "care_team": {
+      "screen_id": "care_team",
+      "title": "Care Team",
+      "path": "/clinical/pcg",
+      "module_id": "clinical",
+      "module_title": "Clinical"
+    },
+    "nurses": {
+      "screen_id": "nurses",
+      "title": "Nurses",
+      "path": "/clinical/nurse",
+      "module_id": "clinical",
+      "module_title": "Clinical"
+    }
+  },
+  "steps": {
+    "crm.senior_leads.add": {
+      "step_id": "crm.senior_leads.add",
+      "title": "Add a senior lead",
+      "guidance": "In Contacts, select **+ Add New**, enter the lead details, and save.",
+      "kind": "onboarding",
+      "completion_check_key": "lead_exists",
+      "screen_id": "senior_leads",
+      "screen_title": "Senior Leads",
+      "screen_path": "/crm",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.senior_leads.milestones": {
+      "step_id": "crm.senior_leads.milestones",
+      "title": "Review lead milestones",
+      "guidance": "Review Initial Contact, Home Tour, biographical information, and document e-sign milestones. Use them to identify what still needs attention.",
+      "kind": "onboarding",
+      "completion_check_key": null,
+      "screen_id": "senior_leads",
+      "screen_title": "Senior Leads",
+      "screen_path": "/crm",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.senior_leads.intake": {
+      "step_id": "crm.senior_leads.intake",
+      "title": "Complete senior intake",
+      "guidance": "Click on the lead’s name. Review Biography, Medical, Care Plan (ADLs and health), and Documents. Enter intake details in the applicable tabs and save.",
+      "kind": "onboarding",
+      "completion_check_key": null,
+      "screen_id": "senior_leads",
+      "screen_title": "Senior Leads",
+      "screen_path": "/crm",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.senior_leads.documents": {
+      "step_id": "crm.senior_leads.documents",
+      "title": "Prepare senior agreements",
+      "guidance": "Select the lead’s name, open Documents, and add or prepare the applicable agreements. Confirm the required packet with your administrator if unclear.",
+      "kind": "onboarding",
+      "completion_check_key": null,
+      "screen_id": "senior_leads",
+      "screen_title": "Senior Leads",
+      "screen_path": "/crm",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.senior_leads.invite": {
+      "step_id": "crm.senior_leads.invite",
+      "title": "Invite a senior lead",
+      "guidance": "With an email on the selected lead, open the row’s three-dot menu and select **Onboard** to invite them to the Assistly portal.",
+      "kind": "onboarding",
+      "completion_check_key": "lead_onboarded",
+      "screen_id": "senior_leads",
+      "screen_title": "Senior Leads",
+      "screen_path": "/crm",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.senior_leads.esign": {
+      "step_id": "crm.senior_leads.esign",
+      "title": "Initiate senior e-sign",
+      "guidance": "For a new senior lead using the signing workflow, review the documents attached to the lead before selecting **Initiate E-Sign** from the row menu; this sends the lead’s documents for signature. Skip this step for a resident already with the home before it adopted Assistly Care.",
+      "kind": "onboarding",
+      "completion_check_key": null,
+      "screen_id": "senior_leads",
+      "screen_title": "Senior Leads",
+      "screen_path": "/crm",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.senior_leads.move": {
+      "step_id": "crm.senior_leads.move",
+      "title": "Move a senior lead to Clinical",
+      "guidance": "From the selected lead’s row menu, choose **Move to Clinical** when the record is eligible. For residents already with the home before Assistly Care, use this path without e-sign.",
+      "kind": "onboarding",
+      "completion_check_key": "record_in_clinical",
+      "screen_id": "senior_leads",
+      "screen_title": "Senior Leads",
+      "screen_path": "/crm",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.senior_leads.bulk": {
+      "step_id": "crm.senior_leads.bulk",
+      "title": "Send a bulk message",
+      "guidance": "In Contacts, use the select-all checkbox or select individual leads, then choose **Send Bulk Message**.",
+      "kind": "reference",
+      "completion_check_key": null,
+      "screen_id": "senior_leads",
+      "screen_title": "Senior Leads",
+      "screen_path": "/crm",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.senior_leads.history": {
+      "step_id": "crm.senior_leads.history",
+      "title": "Review campaign history",
+      "guidance": "Open the **Campaigns History** tab to view previous campaigns.",
+      "kind": "reference",
+      "completion_check_key": null,
+      "screen_id": "senior_leads",
+      "screen_title": "Senior Leads",
+      "screen_path": "/crm",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.referral_agents.add": {
+      "step_id": "crm.referral_agents.add",
+      "title": "Add a referral agent",
+      "guidance": "Select **+ Add New**, enter the referral agent details, and save.",
+      "kind": "reference",
+      "completion_check_key": null,
+      "screen_id": "referral_agents",
+      "screen_title": "Referral Agents",
+      "screen_path": "/crm/referral",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.referral_agents.campaign": {
+      "step_id": "crm.referral_agents.campaign",
+      "title": "Manage referral campaigns",
+      "guidance": "Select recipients before sending a bulk message. Use campaign history to review prior campaigns where available.",
+      "kind": "reference",
+      "completion_check_key": null,
+      "screen_id": "referral_agents",
+      "screen_title": "Referral Agents",
+      "screen_path": "/crm/referral",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.referral_agents.manage": {
+      "step_id": "crm.referral_agents.manage",
+      "title": "Update a referral agent",
+      "guidance": "Set the status to Contacted, Not Contacted, Follow Up Required, or Not Interested and save. Use the row’s three-dot menu to edit or delete an agent.",
+      "kind": "reference",
+      "completion_check_key": null,
+      "screen_id": "referral_agents",
+      "screen_title": "Referral Agents",
+      "screen_path": "/crm/referral",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.care_leads.add": {
+      "step_id": "crm.care_leads.add",
+      "title": "Add a care lead",
+      "guidance": "Select **+ Add New**, enter the care lead details, and save.",
+      "kind": "onboarding",
+      "completion_check_key": "lead_exists",
+      "screen_id": "care_leads",
+      "screen_title": "Care Leads",
+      "screen_path": "/crm/pcg",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.care_leads.documents": {
+      "step_id": "crm.care_leads.documents",
+      "title": "Manage care lead documents",
+      "guidance": "Select the care lead’s name to open their document management area. Add applicable documents; existing documents can be viewed, edited, or deleted by authorized users. Confirm which documents are required for this home.",
+      "kind": "onboarding",
+      "completion_check_key": null,
+      "screen_id": "care_leads",
+      "screen_title": "Care Leads",
+      "screen_path": "/crm/pcg",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.care_leads.menu": {
+      "step_id": "crm.care_leads.menu",
+      "title": "Review available care lead actions",
+      "guidance": "Open the row’s three-dot menu. Guide users only to actions shown for their role and record; verify each action before adding it to the flow.",
+      "kind": "reference",
+      "completion_check_key": null,
+      "screen_id": "care_leads",
+      "screen_title": "Care Leads",
+      "screen_path": "/crm/pcg",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "crm.nurse_leads.add": {
+      "step_id": "crm.nurse_leads.add",
+      "title": "Add a nurse lead",
+      "guidance": "Select **+ Add New**, enter the nurse lead details, and save. Further nurse lead steps need verification.",
+      "kind": "onboarding",
+      "completion_check_key": "lead_exists",
+      "screen_id": "nurse_leads",
+      "screen_title": "Nurse Leads",
+      "screen_path": "/crm/nurse",
+      "module_id": "crm",
+      "module_title": "CRM",
+      "module_path": "/crm"
+    },
+    "clinical.seniors.verify": {
+      "step_id": "clinical.seniors.verify",
+      "title": "Verify the resident in Clinical",
+      "guidance": "Switch to List View and locate the resident. Select their name to open details, including the Face Sheet. Verify the intended resident record exists in Clinical after transfer.",
+      "kind": "onboarding",
+      "completion_check_key": "record_in_clinical",
+      "screen_id": "seniors",
+      "screen_title": "Seniors",
+      "screen_path": "/clinical",
+      "module_id": "clinical",
+      "module_title": "Clinical",
+      "module_path": "/clinical"
+    },
+    "clinical.seniors.menu": {
+      "step_id": "clinical.seniors.menu",
+      "title": "Find resident actions",
+      "guidance": "In List View, open the resident’s three-dot menu. Depending on access, look for Onboard, Add Medication, MedPass, Incident Report, or Initiate E-Sign for new documents.",
+      "kind": "reference",
+      "completion_check_key": null,
+      "screen_id": "seniors",
+      "screen_title": "Seniors",
+      "screen_path": "/clinical",
+      "module_id": "clinical",
+      "module_title": "Clinical",
+      "module_path": "/clinical"
+    },
+    "clinical.seniors.medications": {
+      "step_id": "clinical.seniors.medications",
+      "title": "Manage medication records",
+      "guidance": "Authorized staff can add, edit, or delete medication records, or upload a list for bulk extraction. Qualified staff should verify extracted entries before they are used for care. Gia explains navigation and does not change records or give clinical advice.",
+      "kind": "reference",
+      "completion_check_key": null,
+      "screen_id": "seniors",
+      "screen_title": "Seniors",
+      "screen_path": "/clinical",
+      "module_id": "clinical",
+      "module_title": "Clinical",
+      "module_path": "/clinical"
+    },
+    "clinical.care_team.details": {
+      "step_id": "clinical.care_team.details",
+      "title": "Review a care team member",
+      "guidance": "Select the member’s name to open their record and Face Sheet. The row menu does not include Onboard per the supplied notes; verify other actions separately.",
+      "kind": "reference",
+      "completion_check_key": null,
+      "screen_id": "care_team",
+      "screen_title": "Care Team",
+      "screen_path": "/clinical/pcg",
+      "module_id": "clinical",
+      "module_title": "Clinical",
+      "module_path": "/clinical"
+    },
+    "clinical.nurses.details": {
+      "step_id": "clinical.nurses.details",
+      "title": "Review a nurse record",
+      "guidance": "Select the nurse’s name to open their record and Face Sheet. The row menu does not include Onboard per the supplied notes; verify other actions separately.",
+      "kind": "reference",
+      "completion_check_key": null,
+      "screen_id": "nurses",
+      "screen_title": "Nurses",
+      "screen_path": "/clinical/nurse",
+      "module_id": "clinical",
+      "module_title": "Clinical",
+      "module_path": "/clinical"
+    }
+  },
+  "flows": {
+    "new_senior_lead": {
+      "flow_id": "new_senior_lead",
+      "steps": [
+        "crm.senior_leads.add",
+        "crm.senior_leads.milestones",
+        "crm.senior_leads.intake",
+        "crm.senior_leads.documents",
+        "crm.senior_leads.invite",
+        "crm.senior_leads.esign",
+        "crm.senior_leads.move",
+        "clinical.seniors.verify"
+      ],
+      "sequence_status": "suggested"
+    },
+    "existing_resident_migration": {
+      "flow_id": "existing_resident_migration",
+      "steps": [
+        "crm.senior_leads.move",
+        "clinical.seniors.verify"
+      ],
+      "sequence_status": "suggested"
+    },
+    "care_lead_intake": {
+      "flow_id": "care_lead_intake",
+      "steps": [
+        "crm.care_leads.add",
+        "crm.care_leads.documents"
+      ],
+      "sequence_status": "suggested"
+    },
+    "nurse_lead_intake": {
+      "flow_id": "nurse_lead_intake",
+      "steps": [
+        "crm.nurse_leads.add"
+      ],
+      "sequence_status": "suggested"
+    }
+  }
+}

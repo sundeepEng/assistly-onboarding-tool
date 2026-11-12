@@ -1,0 +1,15 @@
+{
+  "locofyConfig": {
+    "project": "Senior Living Home Application - 1",
+    "id": "2rOoMRvyds4CeTY6AnRFsLUfjJU",
+    "framework": "react-nextjs",
+    "typescript": true,
+    "tailwindAllowGenerateToken": true,
+    "styling": "Tailwind",
+    "unit": "px",
+    "naming": "Kebab Case",
+    "path": "public/",
+    "componentsPath": "c:\\Users\\tejas\\OneDrive\\Desktop\\Project2k25\\kalki\\kalki-fe\\src\\components",
+    "screensPath": "c:\\Users\\tejas\\OneDrive\\Desktop\\Project2k25\\kalki\\kalki-fe\\src\\pages"
+  }
+}

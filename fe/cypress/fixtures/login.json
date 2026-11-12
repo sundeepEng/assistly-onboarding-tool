@@ -1,0 +1,12 @@
+{
+  "invalid": {
+    "malformedEmail": "not-an-email",
+    "shortPassword": "Test@1",
+    "weakPassword": "password12",
+    "unknownEmail": "nobody@assistly.com",
+    "wrongPassword": "Wrong@1234"
+  },
+  "forgotPassword": {
+    "otpSentMessage": "OTP sent"
+  }
+}

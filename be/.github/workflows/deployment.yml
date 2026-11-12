@@ -1,0 +1,74 @@
+name: Assistly CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - "main"
+      - "stg"
+      - "dev"
+      - "bedev"
+
+  workflow_dispatch: # Enables manual trigger from Github GUI
+    inputs:
+      customBranch:
+        description: "Branch to deploy"
+        required: true
+        default: "dev"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    container: node:20
+    environment: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v3
+
+      # Sanitize environment name
+      - name: Sanitize Environment Name
+        run: echo "STAGE=${{ github.ref_name }}" >> $GITHUB_ENV
+
+      # Install zip utility
+      - name: Install zip
+        run: apt-get update && apt-get install -y zip
+
+      - name: Install CDK dependencies
+        run: npm install
+
+      - name: Install Lambda Layer Dependencies
+        run: |
+          cd layers/nodejs
+          npm install
+          cd ..
+
+      # Zip the Lambda Layer
+      - name: Package Lambda Layer
+        run: |
+          cd layers
+          zip -r nodejs-layer.zip nodejs/
+
+      # Install AWS CDK
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+
+      # Compile Typescript to Javascript
+      - name: Compile Typescript to Javascript
+        run: npm run build
+
+      # Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # Deploy stack
+      - name: Deploy to AWS CDK
+        run: |
+          cdk bootstrap
+          cdk deploy --context stackName="luma-${{ github.ref_name }}" --require-approval never --verbose
+        env:
+          CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+          CDK_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+          STAGE: ${{ github.ref_name }}
+          CRYPTO_ENCRYPTION_KEY: ${{ secrets.CRYPTO_ENCRYPTION_KEY }}

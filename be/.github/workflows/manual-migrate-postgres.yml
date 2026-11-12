@@ -1,0 +1,78 @@
+name: Manual Migrate Postgres (RDS)
+
+on:
+  workflow_dispatch:
+    inputs:
+      region:
+        description: 'Target AWS region'
+        required: true
+        default: 'us-east-2'
+        type: string
+      customBranch:
+        description: 'Branch to run migrations from (defaults to the branch you run from)'
+        required: false
+        type: string
+
+env:
+  TARGET_REGION: ${{ inputs.region || secrets.AWS_REGION || 'us-east-2' }}
+
+jobs:
+  migrate-schema:
+    name: Run Knex migrations for ${{ matrix.stage }} in ${{ inputs.region || 'us-east-2' }}
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 3
+      matrix:
+        stage: [dev, stg, main]
+    env:
+      STAGE: ${{ matrix.stage }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.customBranch || github.ref_name }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install ts-node
+        run: npm install -g ts-node typescript
+
+      - name: Install jq and SSM Session Manager plugin
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+          curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o session-manager-plugin.deb
+          sudo dpkg -i session-manager-plugin.deb
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.TARGET_REGION }}
+
+      - name: Load DB credentials from Secrets Manager
+        run: |
+          SECRET=$(aws secretsmanager get-secret-value --secret-id PostgresCredentials-${{ env.STAGE }}-${{ env.TARGET_REGION }} --query SecretString --output text)
+          echo "DB_HOST=$(echo $SECRET | jq -r .host)" >> $GITHUB_ENV
+          echo "DB_USER=$(echo $SECRET | jq -r .username)" >> $GITHUB_ENV
+          echo "DB_PASS=$(echo $SECRET | jq -r .password)" >> $GITHUB_ENV
+          echo "DB_NAME=$(echo $SECRET | jq -r .dbname)" >> $GITHUB_ENV
+          echo "DB_PORT=$(echo $SECRET | jq -r .port)" >> $GITHUB_ENV
+
+      - name: Open SSM tunnel to RDS via the region's bastion
+        run: |
+          aws ssm start-session \
+            --target ${{ vars.BASTION_INSTANCE_ID }} \
+            --document-name AWS-StartPortForwardingSessionToRemoteHost \
+            --parameters "{\"host\":[\"$DB_HOST\"],\"portNumber\":[\"5432\"],\"localPortNumber\":[\"5432\"]}" &
+          sleep 5   # give the tunnel a moment to establish
+
+      - name: Run Knex Migrations
+        run: DB_HOST=127.0.0.1 ts-node utils/postgres-schema-migrations.ts

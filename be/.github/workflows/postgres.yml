@@ -1,0 +1,246 @@
+name: Postgres Schema Migrations Pipeline
+
+on:
+  push:
+    branches:
+      - 'bedev'
+      - 'dev'
+      - 'stg'
+      - 'main'
+
+jobs:
+  migrate-schema-bedev:
+    if: github.ref == 'refs/heads/bedev'
+    runs-on: [self-hosted, dev]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install ts-node
+        run: npm install -g ts-node typescript
+
+      - name: Install jq
+        run: |
+          sudo apt update
+          sudo apt-get install -y jq
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Load DB credentials from Secrets Manager
+        run: |
+          SECRET=$(aws secretsmanager get-secret-value --secret-id PostgresCredentials-bedev --query SecretString --output text)
+          DB_HOST=$(echo $SECRET | jq -r .host)
+          DB_USER=$(echo $SECRET | jq -r .username)
+          DB_PASS=$(echo $SECRET | jq -r .password)
+          DB_NAME=$(echo $SECRET | jq -r .dbname)
+          DB_PORT=$(echo $SECRET | jq -r .port)
+
+          # Prevent these values from being printed in later step logs
+          echo "::add-mask::$DB_HOST"
+          echo "::add-mask::$DB_USER"
+          echo "::add-mask::$DB_PASS"
+          echo "::add-mask::$DB_NAME"
+          echo "::add-mask::$DB_PORT"
+
+          echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+          echo "DB_USER=$DB_USER" >> $GITHUB_ENV
+          echo "DB_PASS=$DB_PASS" >> $GITHUB_ENV
+          echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
+          echo "DB_PORT=$DB_PORT" >> $GITHUB_ENV
+          echo "STAGE=dev" >> $GITHUB_ENV
+
+      - name: Run Knex Migrations
+        run: ts-node utils/postgres-schema-migrations.ts
+  migrate-schema-dev:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: [self-hosted, dev]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install ts-node
+        run: npm install -g ts-node typescript
+
+      - name: Install jq
+        run: |
+          sudo apt update
+          sudo apt-get install -y jq
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Load DB credentials from Secrets Manager
+        run: |
+          SECRET=$(aws secretsmanager get-secret-value --secret-id PostgresCredentials-dev --query SecretString --output text)
+          DB_HOST=$(echo $SECRET | jq -r .host)
+          DB_USER=$(echo $SECRET | jq -r .username)
+          DB_PASS=$(echo $SECRET | jq -r .password)
+          DB_NAME=$(echo $SECRET | jq -r .dbname)
+          DB_PORT=$(echo $SECRET | jq -r .port)
+
+          # Prevent these values from being printed in later step logs
+          echo "::add-mask::$DB_HOST"
+          echo "::add-mask::$DB_USER"
+          echo "::add-mask::$DB_PASS"
+          echo "::add-mask::$DB_NAME"
+          echo "::add-mask::$DB_PORT"
+
+          echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+          echo "DB_USER=$DB_USER" >> $GITHUB_ENV
+          echo "DB_PASS=$DB_PASS" >> $GITHUB_ENV
+          echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
+          echo "DB_PORT=$DB_PORT" >> $GITHUB_ENV
+          echo "STAGE=dev" >> $GITHUB_ENV
+
+      - name: Run Knex Migrations
+        run: ts-node utils/postgres-schema-migrations.ts
+
+  migrate-schema-stg:
+    if: github.ref == 'refs/heads/stg'
+    runs-on: [self-hosted, stg]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install ts-node
+        run: npm install -g ts-node typescript
+
+      - name: Install AWS CLI & jq
+        run: |
+          missing_packages=()
+          command -v aws >/dev/null 2>&1 || missing_packages+=(awscli)
+          command -v jq >/dev/null 2>&1 || missing_packages+=(jq)
+
+          if [ ${#missing_packages[@]} -gt 0 ]; then
+            sudo apt-get -o DPkg::Lock::Timeout=300 update
+            sudo apt-get -o DPkg::Lock::Timeout=300 install -y "${missing_packages[@]}"
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Load DB credentials from Secrets Manager
+        run: |
+          SECRET=$(aws secretsmanager get-secret-value --secret-id PostgresCredentials-stg --query SecretString --output text)
+          DB_HOST=$(echo $SECRET | jq -r .host)
+          DB_USER=$(echo $SECRET | jq -r .username)
+          DB_PASS=$(echo $SECRET | jq -r .password)
+          DB_NAME=$(echo $SECRET | jq -r .dbname)
+          DB_PORT=$(echo $SECRET | jq -r .port)
+
+          # Prevent these values from being printed in later step logs
+          echo "::add-mask::$DB_HOST"
+          echo "::add-mask::$DB_USER"
+          echo "::add-mask::$DB_PASS"
+          echo "::add-mask::$DB_NAME"
+          echo "::add-mask::$DB_PORT"
+
+          echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+          echo "DB_USER=$DB_USER" >> $GITHUB_ENV
+          echo "DB_PASS=$DB_PASS" >> $GITHUB_ENV
+          echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
+          echo "DB_PORT=$DB_PORT" >> $GITHUB_ENV
+          echo "STAGE=stg" >> $GITHUB_ENV
+
+      - name: Run Knex Migrations
+        run: ts-node utils/postgres-schema-migrations.ts
+
+  migrate-schema-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, main]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install ts-node
+        run: npm install -g ts-node typescript
+
+      - name: Install AWS CLI & jq
+        run: |
+          missing_packages=()
+          command -v aws >/dev/null 2>&1 || missing_packages+=(awscli)
+          command -v jq >/dev/null 2>&1 || missing_packages+=(jq)
+
+          if [ ${#missing_packages[@]} -gt 0 ]; then
+            sudo apt-get -o DPkg::Lock::Timeout=300 update
+            sudo apt-get -o DPkg::Lock::Timeout=300 install -y "${missing_packages[@]}"
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Load DB credentials from Secrets Manager
+        run: |
+          SECRET=$(aws secretsmanager get-secret-value --secret-id PostgresCredentials-main --query SecretString --output text)
+          DB_HOST=$(echo $SECRET | jq -r .host)
+          DB_USER=$(echo $SECRET | jq -r .username)
+          DB_PASS=$(echo $SECRET | jq -r .password)
+          DB_NAME=$(echo $SECRET | jq -r .dbname)
+          DB_PORT=$(echo $SECRET | jq -r .port)
+
+          # Prevent these values from being printed in later step logs
+          echo "::add-mask::$DB_HOST"
+          echo "::add-mask::$DB_USER"
+          echo "::add-mask::$DB_PASS"
+          echo "::add-mask::$DB_NAME"
+          echo "::add-mask::$DB_PORT"
+
+          echo "DB_HOST=$DB_HOST" >> $GITHUB_ENV
+          echo "DB_USER=$DB_USER" >> $GITHUB_ENV
+          echo "DB_PASS=$DB_PASS" >> $GITHUB_ENV
+          echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
+          echo "DB_PORT=$DB_PORT" >> $GITHUB_ENV
+          echo "STAGE=main" >> $GITHUB_ENV
+
+      - name: Run Knex Migrations
+        run: ts-node utils/postgres-schema-migrations.ts
+ 

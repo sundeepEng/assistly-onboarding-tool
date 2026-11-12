@@ -1,0 +1,25 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2020,
+    "sourceType": "module"
+  },
+  "env": {
+    "node": true,
+    "cypress/globals": true
+  },
+  "plugins": ["cypress"],
+  "extends": ["plugin:cypress/recommended"],
+  "rules": {
+    "cypress/no-assigning-return-values": "error",
+    "cypress/no-async-tests": "error",
+    "cypress/unsafe-to-chain-command": "error",
+    "cypress/no-pause": "error",
+    "cypress/no-debug": "error",
+    "cypress/no-force": "warn",
+    "cypress/no-unnecessary-waiting": "warn",
+    "cypress/assertion-before-screenshot": "warn",
+    "no-console": "error"
+  }
+}

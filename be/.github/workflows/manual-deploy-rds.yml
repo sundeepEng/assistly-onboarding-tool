@@ -1,0 +1,82 @@
+name: Manual Deploy RDS Stack
+
+on:
+  workflow_dispatch:
+    inputs:
+      region:
+        description: 'Target AWS region'
+        required: true
+        default: 'us-east-2'
+        type: choice
+        options:
+          - us-east-2
+      customBranch:
+        description: 'Branch to deploy (defaults to the branch you run from)'
+        required: false
+        type: string
+
+env:
+  TARGET_REGION: ${{ inputs.region }}
+  LEGACY_DYNAMODB_STACK: 'false'
+
+jobs:
+  deploy:
+    name: Manual deploy RDS to ${{ matrix.stage }} in ${{ inputs.region }}
+    runs-on: ubuntu-latest
+    container: node:20
+    environment: ${{ matrix.stage }}
+    strategy:
+      max-parallel: 1
+      matrix:
+        stage: [dev, stg, main]
+    env:
+      STAGE: ${{ matrix.stage }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.customBranch || github.ref_name }}
+
+      - name: Install zip
+        run: apt-get update && apt-get install -y zip
+
+      - name: Install CDK dependencies
+        run: npm ci
+
+      - name: Install Lambda Layer Dependencies
+        run: |
+          cd layers/nodejs
+          npm ci
+          cd ..
+
+      - name: Package Lambda Layer
+        run: |
+          cd layers
+          zip -r nodejs-layer.zip nodejs/
+
+      - name: Compile TypeScript to JavaScript
+        run: npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.TARGET_REGION }}
+
+      - name: Deploy RDS stack to AWS CDK
+        run: |
+          npx cdk bootstrap \
+            --context stage=${{ env.STAGE }} \
+            --context region=${{ env.TARGET_REGION }} \
+            --context legacyDynamoDbStack=${{ env.LEGACY_DYNAMODB_STACK }}
+          npx cdk deploy --all \
+            --context stage=${{ env.STAGE }} \
+            --context region=${{ env.TARGET_REGION }} \
+            --context stackName="assistly-${{ env.STAGE }}-${{ env.TARGET_REGION }}" \
+            --context legacyDynamoDbStack=${{ env.LEGACY_DYNAMODB_STACK }} \
+            --require-approval never
+        env:
+          CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+          CDK_DEFAULT_REGION: ${{ env.TARGET_REGION }}
+          STAGE: ${{ env.STAGE }}
+          CRYPTO_ENCRYPTION_KEY: ${{ secrets.CRYPTO_ENCRYPTION_KEY }}

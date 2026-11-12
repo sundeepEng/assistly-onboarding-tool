@@ -1,0 +1,416 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://assistly.app/schemas/gia-onboarding/onboarding-schema.json",
+  "title": "Gia Onboarding Knowledge File",
+  "description": "Schema for the YAML metadata block embedded at the top of each Gia house-type onboarding knowledge file. The YAML block is validated against this schema after conversion to JSON.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "house_type_id",
+    "house_type_value",
+    "house_type_name",
+    "roles",
+    "module_access",
+    "flows"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0"]
+    },
+    "house_type_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Stable identifier for this knowledge file, e.g. personal_care_home."
+    },
+    "house_type_value": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Exact homeType value stored on the home record, e.g. 'Personal Care Home' or 'In Home Care'."
+    },
+    "house_type_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Business display name for the house type."
+    },
+    "roles": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/role" }
+    },
+    "module_access": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/moduleAccess" }
+    },
+    "flows": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/flow" }
+    }
+  },
+  "$defs": {
+    "accessLevel": {
+      "type": "string",
+      "enum": ["allowed", "denied", "conditional", "unknown"]
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source", "kind"],
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Repository-relative file path, optionally with a symbol, line range, or test title."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "implementation",
+              "frontend_permission",
+              "route_guard",
+              "schema_validation",
+              "cypress_spec",
+              "backend",
+              "backend_unverified",
+              "business_policy",
+              "as_built_note"
+            ]
+          },
+          "note": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role_id",
+        "description",
+        "onboarding_responsibility",
+        "evidence"
+      ],
+      "properties": {
+        "role_id": {
+          "type": "string",
+          "description": "Exact role value used by the application, e.g. PCHO, PCGLead."
+        },
+        "description": { "type": "string" },
+        "onboarding_responsibility": {
+          "type": "string",
+          "enum": ["administrator", "self_service", "subject", "none"]
+        },
+        "represents": { "type": ["string", "null"] },
+        "access_conditions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      }
+    },
+    "moduleAccess": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "module_id",
+        "page_id",
+        "role_id",
+        "view",
+        "create",
+        "edit",
+        "other_actions",
+        "conditions",
+        "enforcement_locations",
+        "evidence"
+      ],
+      "properties": {
+        "module_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "page_id": { "type": ["string", "null"], "pattern": "^[a-z0-9_]+$" },
+        "role_id": { "type": "string" },
+        "view": { "$ref": "#/$defs/accessLevel" },
+        "create": { "$ref": "#/$defs/accessLevel" },
+        "edit": { "$ref": "#/$defs/accessLevel" },
+        "other_actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["action", "access"],
+            "properties": {
+              "action": { "type": "string" },
+              "access": { "$ref": "#/$defs/accessLevel" },
+              "conditions": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        },
+        "conditions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "enforcement_locations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["navigation", "route", "action", "backend", "unknown"]
+          }
+        },
+        "evidence": { "$ref": "#/$defs/evidence" }
+      }
+    },
+    "flow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "flow_id",
+        "flow_type",
+        "title",
+        "description",
+        "actor_roles",
+        "subject_type",
+        "entry_conditions",
+        "initial_step_id",
+        "modules",
+        "completion_conditions",
+        "unresolved_questions"
+      ],
+      "properties": {
+        "flow_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "flow_type": {
+          "type": "string",
+          "enum": ["house_setup", "individual_onboarding"]
+        },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "actor_roles": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "subject_type": { "type": "string" },
+        "entry_conditions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "initial_step_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "modules": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/flowModule" }
+        },
+        "completion_conditions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "unresolved_questions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "flowModule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "module_id",
+        "display_number",
+        "title",
+        "description",
+        "order",
+        "tasks"
+      ],
+      "properties": {
+        "module_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "display_number": { "type": "string", "pattern": "^[0-9]+$" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "order": { "type": "integer", "minimum": 1 },
+        "tasks": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/task" }
+        }
+      }
+    },
+    "task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "task_id",
+        "display_number",
+        "title",
+        "description",
+        "path",
+        "actor_roles",
+        "subject_type",
+        "steps"
+      ],
+      "properties": {
+        "task_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "display_number": { "type": "string", "pattern": "^[0-9]+\\.[a-z]$" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "path": { "type": "string" },
+        "actor_roles": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "subject_type": { "type": "string" },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/step" }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step_id",
+        "display_number",
+        "order",
+        "title",
+        "description",
+        "actor_roles",
+        "applicability_conditions",
+        "path",
+        "route_parameters",
+        "menu_path",
+        "tab_or_section",
+        "ui_action",
+        "prerequisites",
+        "required_fields",
+        "instructions",
+        "gia_message",
+        "completion",
+        "transitions",
+        "skip_conditions",
+        "common_errors",
+        "escalation_conditions",
+        "evidence",
+        "unresolved_questions"
+      ],
+      "properties": {
+        "step_id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "display_number": { "type": "string", "pattern": "^[0-9]+\\.[a-z]\\.[0-9]+$" },
+        "order": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "actor_roles": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "applicability_conditions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "path": {
+          "type": "string",
+          "description": "Verified route pattern. Use {APP_BASE_URL} when the deployment URL is unknown and {param} for route parameters supplied by application context."
+        },
+        "route_parameters": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "menu_path": { "type": ["string", "null"] },
+        "tab_or_section": { "type": ["string", "null"] },
+        "ui_action": { "type": ["string", "null"] },
+        "prerequisites": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "required_fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["field", "required"],
+            "properties": {
+              "field": { "type": "string" },
+              "required": {
+                "type": "string",
+                "enum": ["yes", "no", "conditional"]
+              },
+              "rules": { "type": ["string", "null"] },
+              "condition": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "instructions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "gia_message": { "type": "string" },
+        "completion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "description",
+            "verification_source",
+            "verification_rule",
+            "limitations"
+          ],
+          "properties": {
+            "description": { "type": "string" },
+            "verification_source": {
+              "type": ["string", "null"],
+              "description": "Where completion can be authoritatively checked, e.g. 'GET /v1/user/{id} milestone array'."
+            },
+            "verification_rule": { "type": ["string", "null"] },
+            "limitations": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["next_step_id", "condition"],
+            "properties": {
+              "next_step_id": {
+                "type": ["string", "null"],
+                "description": "step_id of the next step, or null when the flow ends or the next step is chosen at runtime."
+              },
+              "condition": { "type": "string" },
+              "optional": { "type": ["boolean", "null"] }
+            }
+          }
+        },
+        "skip_conditions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "common_errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["error", "resolution"],
+            "properties": {
+              "error": { "type": "string" },
+              "resolution": { "type": "string" },
+              "evidence": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "escalation_conditions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "evidence": { "$ref": "#/$defs/evidence" },
+        "unresolved_questions": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}

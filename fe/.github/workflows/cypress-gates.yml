@@ -1,0 +1,60 @@
+name: Cypress Gates
+
+# Layered quality gates built on the reusable cypress-automation.yml runner.
+#
+#   PR          → persona matrix on dev   (fast, ~5 min parallel per role)
+#   merge→dev   → sanity lane on dev      (@smoke + @sanity module corpus)
+#   push→main   → full corpus on prod     (deployment gate, ≥80% floor)
+#
+# Persona lanes use `grepTags=@<role>+-@defect`, which runs BOTH the role's
+# spec under cypress/e2e/personas/ AND every module test tag-personas.js
+# marked for that role — so a persona gate sweeps its real permission path
+# through the module corpus, not just the curated journey file.
+
+"on":
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+
+concurrency:
+  group: cypress-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── PR → dev: one job per persona, all in parallel ────────────────────────
+  personas:
+    name: Persona — ${{ matrix.persona }}
+    if: github.event_name == 'pull_request'
+    strategy:
+      fail-fast: false # every persona reports — one role's red must not mask another's
+      matrix:
+        persona: [nurse, senior, homeadmin, pcg]
+    uses: ./.github/workflows/cypress-automation.yml
+    with:
+      environment: dev
+      tags: "@${{ matrix.persona }}+-@defect"
+      pass_threshold: "80"
+    secrets: inherit
+
+  # ── merge → dev: build-acceptance lane over the module corpus ─────────────
+  sanity:
+    name: Sanity — dev
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    uses: ./.github/workflows/cypress-automation.yml
+    with:
+      environment: dev
+      tags: "@smoke @sanity -@defect"
+      pass_threshold: "80"
+    secrets: inherit
+
+  # ── release → prod: the whole gated corpus is the deployment gate ─────────
+  regression:
+    name: Full corpus — prod
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/cypress-automation.yml
+    with:
+      environment: main
+      tags: "-@defect"
+      pass_threshold: "80"
+    secrets: inherit

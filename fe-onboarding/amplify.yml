@@ -1,0 +1,112 @@
+version: 1
+applications:
+  - appRoot: .
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            # Step 1: Install dependencies
+            - npm install
+
+            # Step 2: Set environment variables based on branch
+            - echo "Setting environment variables"
+            - |
+              if [ "$AWS_BRANCH" == "dev" ]; then
+                echo "NEXT_PUBLIC_BASE_URL=${API_URL_DEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_IDENTITY_POOL_ID=${USER_IDENTITY_POOL_ID_DEV}" >> .env.local
+                echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${USER_POOL_ID_DEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_PROFILE_IMAGES_BUCKET_NAME=${S3_PROFILE_IMAGES_BUCKET_NAME_DEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_MODIFIED_CONTRACTS_BUCKET_NAME=${S3_MODIFIED_CONTRACTS_DEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_ORIGINAL_CONTRACTS_BUCKET_NAME=${S3_ORIGINAL_CONTRACTS_DEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_USER_DOCUMENTS_BUCKET_NAME=${S3_USER_DOCUMENTS_BUCKET_NAME_DEV}" >> .env.local
+                echo "NEXT_PUBLIC_WS_URL=${WEBSOCKET_URL_DEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_DOCUSEAL_ADVANCE_DIRECTIVE_CHECKLIST_ID=${DOCUSEAL_ADVANCE_DIRECTIVE_CHECKLIST_ID_DEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_DOCUSEAL_INVENTORY_LIST_ID=${DOCUSEAL_INVENTORY_LIST_ID_DEV}" >> .env.local
+                echo "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}" >> .env.local
+                echo "OPENAI_API_KEY=${OPENAI_API_KEY_DEV}" >> .env.production
+                echo "NEXT_PUBLIC_STAGE=${STAGE_DEV}" >> .env.local
+                
+              elif [ "$AWS_BRANCH" == "bedev" ]; then
+                echo "NEXT_PUBLIC_BASE_URL=${API_URL_BEDEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_IDENTITY_POOL_ID=${USER_IDENTITY_POOL_ID_BEDEV}" >> .env.local
+                echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${USER_POOL_ID_BEDEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_PROFILE_IMAGES_BUCKET_NAME=${S3_PROFILE_IMAGES_BUCKET_NAME_BEDEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_MODIFIED_CONTRACTS_BUCKET_NAME=${S3_MODIFIED_CONTRACTS_BEDEV}">> .env.local
+                echo "NEXT_PUBLIC_AWS_ORIGINAL_CONTRACTS_BUCKET_NAME=${S3_ORIGINAL_CONTRACTS_BEDEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_USER_DOCUMENTS_BUCKET_NAME=${S3_USER_DOCUMENTS_BUCKET_NAME_BEDEV}" >> .env.local
+                echo "NEXT_PUBLIC_WS_URL=${WEBSOCKET_URL_BEDEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_DOCUSEAL_ADVANCE_DIRECTIVE_CHECKLIST_ID=${DOCUSEAL_ADVANCE_DIRECTIVE_CHECKLIST_ID_BEDEV}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_DOCUSEAL_INVENTORY_LIST_ID=${DOCUSEAL_INVENTORY_LIST_ID_BEDEV}" >> .env.local
+                echo "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}" >> .env.local
+                echo "NEXT_PUBLIC_STAGE=${STAGE_BEDEV}" >> .env.local
+                
+              elif [ "$AWS_BRANCH" == "stg" ]; then
+                echo "NEXT_PUBLIC_BASE_URL=${API_URL_STG}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_IDENTITY_POOL_ID=${USER_IDENTITY_POOL_ID_STG}" >> .env.local
+                echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${USER_POOL_ID_STG}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_PROFILE_IMAGES_BUCKET_NAME=${S3_PROFILE_IMAGES_BUCKET_NAME_STG}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_MODIFIED_CONTRACTS_BUCKET_NAME=${S3_MODIFIED_CONTRACTS_STG}">> .env.local
+                echo "NEXT_PUBLIC_AWS_ORIGINAL_CONTRACTS_BUCKET_NAME=${S3_ORIGINAL_CONTRACTS_STG}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_USER_DOCUMENTS_BUCKET_NAME=${S3_USER_DOCUMENTS_BUCKET_NAME_STG}" >> .env.local
+                echo "NEXT_PUBLIC_WS_URL=${WEBSOCKET_URL_STG}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_DOCUSEAL_ADVANCE_DIRECTIVE_CHECKLIST_ID=${DOCUSEAL_ADVANCE_DIRECTIVE_CHECKLIST_ID_STG}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_DOCUSEAL_INVENTORY_LIST_ID=${DOCUSEAL_INVENTORY_LIST_ID_STG}" >> .env.local
+                echo "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}" >> .env.local
+                echo "OPENAI_API_KEY=${OPENAI_API_KEY_STG}" >> .env.production
+                echo "NEXT_PUBLIC_STAGE=${STAGE_STG}" >> .env.local
+
+              elif [ "$AWS_BRANCH" == "uat" ]; then
+                echo "NEXT_PUBLIC_BASE_URL=${API_URL_UAT}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_IDENTITY_POOL_ID=${USER_IDENTITY_POOL_ID_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${USER_POOL_ID_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_PROFILE_IMAGES_BUCKET_NAME=${S3_PROFILE_IMAGES_BUCKET_NAME_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_MODIFIED_CONTRACTS_BUCKET_NAME=${S3_MODIFIED_CONTRACTS_PROD}">> .env.local
+                echo "NEXT_PUBLIC_AWS_ORIGINAL_CONTRACTS_BUCKET_NAME=${S3_ORIGINAL_CONTRACTS_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_USER_DOCUMENTS_BUCKET_NAME=${S3_USER_DOCUMENTS_BUCKET_NAME_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_WS_URL=${WEBSOCKET_URL_UAT}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_DOCUSEAL_ADVANCE_DIRECTIVE_CHECKLIST_ID=${DOCUSEAL_ADVANCE_DIRECTIVE_CHECKLIST_ID_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_DOCUSEAL_INVENTORY_LIST_ID=${DOCUSEAL_INVENTORY_LIST_ID_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}" >> .env.local
+                echo "OPENAI_API_KEY=${OPENAI_API_KEY_PROD}" >> .env.production
+                echo "NEXT_PUBLIC_STAGE=${STAGE_PROD}" >> .env.local
+
+              elif [ "$AWS_BRANCH" == "main" ]; then
+                echo "NEXT_PUBLIC_BASE_URL=${API_URL_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_IDENTITY_POOL_ID=${USER_IDENTITY_POOL_ID_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_COGNITO_USER_POOL_ID=${USER_POOL_ID_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_PROFILE_IMAGES_BUCKET_NAME=${S3_PROFILE_IMAGES_BUCKET_NAME_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_MODIFIED_CONTRACTS_BUCKET_NAME=${S3_MODIFIED_CONTRACTS_PROD}">> .env.local
+                echo "NEXT_PUBLIC_AWS_ORIGINAL_CONTRACTS_BUCKET_NAME=${S3_ORIGINAL_CONTRACTS_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_USER_DOCUMENTS_BUCKET_NAME=${S3_USER_DOCUMENTS_BUCKET_NAME_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_WS_URL=${WEBSOCKET_URL_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_DOCUSEAL_ADVANCE_DIRECTIVE_CHECKLIST_ID=${DOCUSEAL_ADVANCE_DIRECTIVE_CHECKLIST_ID_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_AWS_DOCUSEAL_INVENTORY_LIST_ID=${DOCUSEAL_INVENTORY_LIST_ID_PROD}" >> .env.local
+                echo "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}" >> .env.local
+                echo "OPENAI_API_KEY=${OPENAI_API_KEY_PROD}" >> .env.production
+                echo "NEXT_PUBLIC_STAGE=${STAGE_PROD}" >> .env.local
+              fi
+
+        build:
+          commands:
+            - echo "Environment configured"
+            - npm run build
+
+        postBuild:
+          commands:
+            # Remove non-runtime build artifacts to keep the deployment package under 230 MB
+            - rm -rf .next/cache .next/build .next/diagnostics .next/types .next/trace .next/dev
+            - find .next -name '*.map' -type f -delete
+            - echo "Build completed successfully"
+
+      artifacts:
+        # This specifies where the build output is located
+        baseDirectory: .next
+        files:
+          - "**/*" # Include all files from the output directory
+          - "!cache/**/*"
+
+    caching:
+      paths:
+        - node_modules/**/*
+    ssr:
+      enabled: true

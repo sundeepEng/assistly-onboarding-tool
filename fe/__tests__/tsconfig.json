@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    // `types` is pinned so only Jest's globals are in scope here. Without it,
+    // Cypress's Chai `expect` can win and every jest-dom matcher reads as an
+    // error in the editor.
+    "types": ["node", "jest", "@testing-library/jest-dom"],
+    "isolatedModules": false,
+    "jsx": "react-jsx"
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../jest.setup.ts", "../next-env.d.ts"],
+  "exclude": []
+}
